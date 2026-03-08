@@ -1,12 +1,4 @@
-interface Patient {
-    id: number;
-    name: string;
-    age: number;
-    gender: string;
-    mobileNumber: number;
-    accompany: string;
-    accompanyTitle: string;
-}
+import type { Patient } from "~/types/patient"
 
 const patients: Patient[] = [
     {

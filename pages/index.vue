@@ -1,26 +1,37 @@
 <script setup>
+import { computed } from "vue";
+
 import Navbar from "~/components/navbar.vue";
 import PatientCard from "~/components/patientCard.vue";
 import DataCard from "~/components/dataCard.vue";
 import ECGChart from "~/components/ECGChart.vue";
+
 import { useSensorData } from "~/composables/useSensorData";
 
 const { data } = useSensorData();
 
-// fallback values to avoid undefined errors
-const bpm = computed(() => data.value?.bpm || 0);
-const ecg = computed(() => data.value?.ecg || 0);
-const motion = computed(() => data.value?.motion || 0);
+// ✅ Safe computed values
+const ecg = computed(() => data.value?.ecg ?? 0);
+const ax = computed(() => data.value?.ax ?? 0);
+const ay = computed(() => data.value?.ay ?? 0);
+const az = computed(() => data.value?.az ?? 0);
+const loPlus = computed(() => data.value?.loPlus ?? 1);
+const loMinus = computed(() => data.value?.loMinus ?? 1);
 
-// leads logic
-const leads = computed(() => {
-  return data.value?.loPlus === 0 && data.value?.loMinus === 0;
+// ✅ Motion magnitude
+const motion = computed(() => {
+  return Math.sqrt(ax.value * ax.value + ay.value * ay.value + az.value * az.value).toFixed(2);
 });
 
-// simple fall detection (basic)
-const fall = computed(() => {
-  return motion.value > 13;
-});
+// ✅ Leads status
+const leads = computed(() => loPlus.value === 0 && loMinus.value === 0);
+
+// ✅ Simple BPM (placeholder for now)
+const bpm = computed(() => (ecg.value > 2000 ? 80 : 0));
+
+// ✅ Fall detection
+const fall = computed(() => motion.value > 12);
+const temper = computed(() => data.value?.temp ?? 0);
 </script>
 
 <template>
@@ -29,23 +40,25 @@ const fall = computed(() => {
     <!-- Navbar -->
     <Navbar />
 
-    <!-- Top Section -->
-    <div class="top">
+    <!-- Patient Info -->
+    <div class="section">
       <PatientCard />
     </div>
 
     <!-- Data Cards -->
-    <DataCard
-      :bpm="bpm"
-      :ecg="ecg"
-      :temp="36.5"
-      :leads="leads"
-      :motion="motion"
-      :fall="fall"
-    />
+    <div class="section">
+      <DataCard
+        :bpm="bpm"
+        :ecg="ecg"
+        :temp="42"
+        :leads="leads"
+        :motion="motion"
+        :fall="fall"
+      />
+    </div>
 
     <!-- ECG Graph -->
-    <div class="chart">
+    <div class="section chart">
       <ECGChart :ecg="ecg" />
     </div>
 
@@ -57,13 +70,16 @@ const fall = computed(() => {
   background: #0a0a0a;
   min-height: 100vh;
   padding: 20px;
+  color: white;
 }
 
-.top {
+.section {
   margin: 20px 0;
 }
 
 .chart {
-  margin-top: 20px;
+  background: #111;
+  padding: 15px;
+  border-radius: 10px;
 }
 </style>
